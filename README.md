@@ -5,7 +5,7 @@
 * 部分游戏`steam`账号没有游戏获取到的`AppInfo`不完整，导致`安装路径无效`和`应用配置无效`
 * `AppInfo`保存了`steam`游戏的基础配置，包括安装的目录，游戏进程名称，清单信息
 * `AppInfo`路径: `steam/appcache/appinfo.vdf`
-* 判断`AppInfo`是否完整: 打开[console](steam://open/console)输入`app_info_print {appid}`查找`depots`和`config`是否存在
+* 判断`AppInfo`是否完整: 打开`steam://open/console`输入`app_info_print {appid}`查找`depots`和`config`是否存在
 
 ## 使用教程
 
