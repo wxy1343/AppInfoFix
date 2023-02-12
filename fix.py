@@ -3,7 +3,7 @@ import winreg
 import argparse
 import requests
 import traceback
-from VDF import VDF
+from appinfo import Appinfo
 from pathlib import Path
 from steam.core.manifest import DepotManifest
 
@@ -14,6 +14,7 @@ parser.add_argument('-l', '--launch', type=str)
 parser.add_argument('-d', '--depot-id', type=str)
 parser.add_argument('-m', '--manifest-gid', type=str)
 parser.add_argument('-s', '--size', type=str)
+parser.add_argument('-n', '--no-fix-config', action='store_true', default=False)
 
 repo = 'wxy1343/ManifestAutoUpdate'
 
@@ -26,12 +27,16 @@ def get_steam_path():
 def main(args=None):
     args = parser.parse_args(args)
     app_id = args.app_id or int(input('appid: '))
-    install_dir = args.install_dir or input('安装目录: ')
-    launch = args.launch or input('启动进程: ')
+    install_dir = None
+    launch = None
+    if not args.no_fix_config:
+        install_dir = args.install_dir or input('安装目录: ')
+        launch = args.launch or input('启动进程: ')
     steam_path = get_steam_path()
-    vdf = VDF(steam_path=steam_path)
+    vdf = Appinfo(steam_path/'appcache/appinfo.vdf')
     app_info = vdf.parsedAppInfo[app_id]
-    app_info['sections']['appinfo']['config'] = {'installdir': install_dir, 'launch': {'0': {'executable': launch}}}
+    if install_dir and launch:
+        app_info['sections']['appinfo']['config'] = {'installdir': install_dir, 'launch': {'0': {'executable': launch}}}
     depot_id_list = args.depot_id.split(',') if args.depot_id else []
     manifest_gid_list = args.manifest_gid.split(',') if args.manifest_gid else len(depot_id_list) * [None]
     size_list = args.size.split(',') if args.size else len(depot_id_list) * [None]
@@ -68,7 +73,7 @@ def main(args=None):
         url = f'https://api.github.com/repos/{repo}/branches/{app_id}'
         r = requests.get(url)
         if 'commit' in r.json():
-            sha = r.json()['commit']['sha']
+            # sha = r.json()['commit']['sha']
             url = r.json()['commit']['commit']['tree']['url']
             r = requests.get(url)
             if 'tree' in r.json():
@@ -89,7 +94,7 @@ def main(args=None):
     app_info['sections']['appinfo']['depots'] = {}
     for depot_id, _ in manifest_info.items():
         manifest_gid, size = _
-        print(f'depot: {depot_id}, manifests: {manifest_gid}, size: {size}')
+        print(f'depot: {depot_id}, manifest: {manifest_gid}, size: {size}')
         app_info['sections']['appinfo']['depots'][str(depot_id)] = {'manifests': {'public': str(manifest_gid)},
                                                                     'maxsize': str(size)}
     vdf.update_app(app_info)
