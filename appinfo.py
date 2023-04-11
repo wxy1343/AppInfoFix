@@ -321,4 +321,4 @@ class Appinfo:
                         + b"\n"
                     )
 
-        return
+        return formatted_data
